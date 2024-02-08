@@ -6,21 +6,16 @@ $error = false;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = mysqli_real_escape_string($mysqli, $_POST['username']);
-    $password = $_POST['password'];
+    $email = mysqli_real_escape_string($mysqli, $_POST['email']);
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-    $sql = "SELECT password FROM users WHERE username = ?";
+    $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
+    $stmt->bind_param("sss", $username, $email, $password);
 
-    if ($user && password_verify($password, $user['password'])) {
-        session_start();
-        $_SESSION['username'] = $username;
-        header("Location: backoffice.php");
-        exit;
-    } else {
+    try {
+        $stmt->execute();
+    } catch (mysqli_sql_exception $e) {
         $error = true;
     }
 }
@@ -103,32 +98,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="bg-dark text-white">
     <?php include('navbar.php'); ?>
     <div class="d-flex justify-content-center align-items-center vh-100">
-        <div class="card text-white bg-dark fade-in">
-            <div class="card-body border-light rounded-3">
-                <h5 class="card-title text-center">Login</h5>
+        <div class="card text-white bg-dark fade-in border-light">
+            <div class="card-body">
+                <h5 class="card-title text-center">Registrazione</h5>
                 <?php if ($error): ?>
                     <div class="alert alert-danger" role="alert">
-                        Credenziali errate
+                        Username o Email già utilizzate
                     </div>
                 <?php endif; ?>
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username">
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                        </div>
-                        <button type="submit" class="btn btn-light">Entra</button>
-                        <a href="registrazione.php" class="btn btn-secondary">Registrati</a>
-                    </form>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-light">Registrati</button>
+                        <a href="index.php" class="btn btn-secondary">Accedi</a>
+                    </div>
+                </form>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>
