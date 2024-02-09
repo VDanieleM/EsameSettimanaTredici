@@ -3,20 +3,28 @@
 require_once('config.php');
 
 $error = false;
+$registrazione_riuscita = false;
+$campi_vuoti = false;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = mysqli_real_escape_string($mysqli, $_POST['username']);
     $email = mysqli_real_escape_string($mysqli, $_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-    $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-    $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("sss", $username, $email, $password);
+    if (empty($username) || empty($email) || empty($_POST['password'])) {
+        $campi_vuoti = true;
+    } else {
+        $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+        $stmt = $mysqli->prepare($sql);
+        $stmt->bind_param("sss", $username, $email, $password);
 
-    try {
-        $stmt->execute();
-    } catch (mysqli_sql_exception $e) {
-        $error = true;
+        try {
+            if ($stmt->execute()) {
+                $registrazione_riuscita = true;
+            }
+        } catch (mysqli_sql_exception $e) {
+            $error = true;
+        }
     }
 }
 ?>
@@ -101,9 +109,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="card text-white bg-dark fade-in border-light">
             <div class="card-body">
                 <h5 class="card-title text-center">Registrazione</h5>
+                <?php if ($registrazione_riuscita): ?>
+                    <div class="alert alert-success" role="alert">
+                        Registrazione avvenuta con successo, fai login per accedere
+                    </div>
+                <?php endif; ?>
                 <?php if ($error): ?>
                     <div class="alert alert-danger" role="alert">
                         Username o Email già utilizzate
+                    </div>
+                <?php endif; ?>
+                <?php if ($campi_vuoti): ?>
+                    <div class="alert alert-warning" role="alert">
+                        Tutti i campi sono obbligatori
                     </div>
                 <?php endif; ?>
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">

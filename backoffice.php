@@ -1,3 +1,54 @@
+<?php
+session_start();
+
+// Controllo se l'utente è loggato
+if (!isset($_SESSION['username'])) {
+    ?>
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            #overlay {
+                display: flex;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.9);
+                z-index: 2;
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                color: white;
+                font-size: 2em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="overlay" class="d-flex">
+            <div>Logga per accedere alla pagina, sarai reindirizzato tra 3 secondi</div>
+        </div>
+
+        <script>
+            setTimeout(function () {
+                window.location.href = 'index.php';
+            }, 3000);
+        </script>
+    </body>
+
+    </html>
+    <?php
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,8 +63,104 @@
 
 <body class="bg-dark text-white">
     <?php include('navbar.php'); ?>
-    <div class="container d-flex align-items-center justify-content-center">
-        <!-- Button trigger modal -->
+    <div class="container d-flex align-items-center justify-content-center mt-5">
+
+        <!-- Button Aggiunta Autore -->
+        <button type="button" class="btn btn-light me-3" data-bs-toggle="modal" data-bs-target="#addAuthorModal"
+            style="max-height: 100px">
+            Aggiungi autore
+        </button>
+
+        <!-- Modale Aggiungi Autore -->
+        <div class="modal fade" id="addAuthorModal" tabindex="-1" aria-labelledby="addAuthorModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content bg-dark text-white">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addAuthorModalLabel">Aggiungi un nuovo autore</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addAuthorForm" method="post" action="gestione.php">
+                            <input type="hidden" name="add_author" value="1">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="data_di_nascita" class="form-label">Data di nascita</label>
+                                <input type="date" class="form-control" id="data_di_nascita" name="data_di_nascita"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ritratto" class="form-label">Ritratto</label>
+                                <input type="text" class="form-control" id="ritratto" name="ritratto" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                        <button type="submit" form="addAuthorForm" class="btn btn-light">Salva</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Button Mostra Autori -->
+        <button type="button" class="btn btn-light me-3" data-bs-toggle="modal" data-bs-target="#authorsModal"
+            style="max-height: 100px">
+            Mostra autori
+        </button>
+
+        <!-- Modale Mostra Autori -->
+        <div class="modal fade" id="authorsModal" tabindex="-1" aria-labelledby="authorsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content bg-dark text-white">
+                    <div class="modal-header text-center align-middle">
+                        <h5 class="modal-title" id="authorsModalLabel">Mostra autori</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-dark table-striped text-center">
+                            <thead>
+                                <tr class="align-middle">
+                                    <th>ID</th>
+                                    <th>Ritratto</th>
+                                    <th>Nome</th>
+                                    <th>Nascita</th>
+                                    <th>Pubblicazioni</th>
+                                    <th>Azione</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                require_once('config.php');
+                                $result = $mysqli->query("SELECT autori.id, autori.nome, autori.data_di_nascita, autori.ritratto, COUNT(libri.id) AS num_libri FROM autori LEFT JOIN libri ON autori.id = libri.autore_id GROUP BY autori.id, autori.nome, autori.data_di_nascita, autori.ritratto");
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr class='align-middle'>";
+                                    echo "<td>" . $row['id'] . "</td>";
+                                    echo "<td><img src='" . $row['ritratto'] . "' alt='Ritratto' width='80' height='80' class='rounded-2'></td>";
+                                    echo "<td>" . $row['nome'] . "</td>";
+                                    echo "<td>" . $row['data_di_nascita'] . "</td>";
+                                    echo "<td>" . $row['num_libri'] . "</td>";
+                                    echo "<td><a href='gestione.php?delete_author=" . $row['id'] . "' class='btn btn-danger'><i class='bi bi-trash'></i></a></td>";
+                                    echo "</tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer text-center align-middle">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Button Aggiunta Libro -->
         <button type="button" class="btn btn-light me-3" data-bs-toggle="modal" data-bs-target="#addBookModal"
             style="max-height: 100px">
             Aggiungi libro
@@ -35,9 +182,20 @@
                                 <label for="titolo" class="form-label">Titolo</label>
                                 <input type="text" class="form-control" id="titolo" name="titolo" required>
                             </div>
+                            <?php
+                            $sql = "SELECT id, nome FROM autori";
+                            $result = $mysqli->query($sql);
+                            ?>
+
                             <div class="mb-3">
                                 <label for="autore" class="form-label">Autore</label>
-                                <input type="text" class="form-control" id="autore" name="autore" required>
+                                <select class="form-control" id="autore" name="autore" required>
+                                    <?php
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo '<option value="' . $row['id'] . '">' . $row['nome'] . '</option>';
+                                    }
+                                    ?>
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label for="anno_pubblicazione" class="form-label">Anno Pubblicazione</label>
@@ -67,62 +225,17 @@
             </div>
         </div>
 
-        <!-- Button trigger modal -->
-        <button type="button" class="btn btn-light me-3" data-bs-toggle="modal" data-bs-target="#authorsModal"
-            style="max-height: 100px">
-            Mostra autori
-        </button>
-
-        <!-- Modale Mostra Autori -->
-        <div class="modal fade" id="authorsModal" tabindex="-1" aria-labelledby="authorsModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content bg-dark text-white">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="authorsModalLabel">Mostra autori</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="table table-dark table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Nome Autore</th>
-                                    <th>Numero di Libri</th>
-                                    <th>Azione</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                require_once('config.php');
-                                $result = $mysqli->query("SELECT autori.id, autori.nome, COUNT(libri.id) AS num_libri FROM autori LEFT JOIN libri ON autori.id = libri.autore_id GROUP BY autori.id, autori.nome");
-                                while ($row = $result->fetch_assoc()) {
-                                    echo "<tr>";
-                                    echo "<td>" . $row['nome'] . "</td>";
-                                    echo "<td>" . $row['num_libri'] . "</td>";
-                                    echo "<td><a href='gestione.php?delete_author=" . $row['id'] . "' class='btn btn-danger'>X</a></td>";
-                                    echo "</tr>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <table class="table table-dark table-striped mt-3" style="border: 1px solid gray;">
+        <table class="table table-dark table-striped mt-3 text-center" style="border: 1px solid gray;">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
+                    <th scope="col">Copertina</th>
                     <th scope="col">Titolo</th>
                     <th scope="col">Autore</th>
-                    <th scope="col">Anno Pubblicazione</th>
+                    <th scope="col">Pubblicazione</th>
                     <th scope="col">Genere</th>
                     <th scope="col">Prezzo</th>
-                    <th scope="col">Azione</th>
+                    <th scope="col">Azioni</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,38 +244,39 @@
                 if ($result = $mysqli->query($sql)) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>";
-                        echo "<td>" . $row['id'] . "</td>";
-                        echo "<td><div style='background-image: url(\"" . $row['copertina'] . "\"); width: 100px; height: 150px; background-size: cover; background-position: center;'></div></td>";
-                        echo "<td>" . $row['titolo'] . "</td>";
+                        echo "<td class='align-middle'>" . $row['id'] . "</td>";
+                        echo "<td class='align-middle'><div style='background-image: url(\"" . $row['copertina'] . "\"); width: 100px; height: 150px; background-size: cover; background-position: center;' class='rounded-2'></div></td>";
+                        echo "<td class='align-middle'>" . $row['titolo'] . "</td>";
 
-                        // Modale per i dettagli dell'autore
+                        // Modale per visualizzare i dettagli dell'autore
                         if (isset($row['autore'])) {
                             $sql_autore = "SELECT * FROM `autori` WHERE `nome` = '" . $mysqli->real_escape_string($row['autore']) . "'";
                             if ($result_autore = $mysqli->query($sql_autore)) {
                                 $row_autore = $result_autore->fetch_assoc();
-                                echo "<td><div class='d-flex align-items-center'><button class='btn btn-light me-2' data-bs-toggle='modal' data-bs-target='#authorModal" . $row_autore['id'] . "'>" . $row['autore'] . "</button>";
+                                echo "<td class='align-middle'><div class='d-flex align-items-center justify-content-center'><button class='btn btn-light me-2' data-bs-toggle='modal' data-bs-target='#authorModal" . $row_autore['id'] . "'>" . $row['autore'] . "</button>";
                                 echo "<button class='btn btn-warning' data-bs-toggle='modal' data-bs-target='#editAuthorModal" . $row_autore['id'] . "'><i class='bi bi-pencil-fill'></i></button></div></td>";
                                 echo "<div class='modal fade' id='authorModal" . $row_autore['id'] . "' tabindex='-1' aria-labelledby='authorModalLabel" . $row_autore['id'] . "' aria-hidden='true'>";
                                 echo "<div class='modal-dialog'>";
                                 echo "<div class='modal-content bg-dark text-white'>";
                                 echo "<div class='modal-header'>";
-                                echo "<h5 class='modal-title' id='authorModalLabel" . $row_autore['id'] . "'>Dettagli Autore</h5>";
+                                echo "<h5 class='modal-title text-center' id='authorModalLabel" . $row_autore['id'] . "'>Dettagli Autore</h5>";
                                 echo "<button type='button' class='btn-close btn-close-white' data-bs-dismiss='modal' aria-label='Close'></button>";
                                 echo "</div>";
-                                echo "<div class='modal-body'>";
-                                echo "<p>Nome: " . $row_autore['nome'] . "</p>";
-                                echo "<p>Data di nascita: " . $row_autore['data_di_nascita'] . "</p>";
+                                echo "<div class='modal-body text-center'>";
+                                echo "<p><img src='" . $row_autore['ritratto'] . "' alt='Ritratto' width='100' height='100' class='rounded-2'></p>";
+                                echo "<p><span class='fw-bold'>Nome:</span> " . $row_autore['nome'] . "</p>";
+                                echo "<p><span class='fw-bold'>Data di nascita:</span> " . $row_autore['data_di_nascita'] . "</p>";
                                 $sql_libri = "SELECT titolo FROM `libri` WHERE `autore_id` = " . $row_autore['id'];
                                 if ($result_libri = $mysqli->query($sql_libri)) {
-                                    echo "<p>Libri:</p>";
-                                    echo "<ul>";
+                                    echo "<p class='fw-bold'>Libri:</p>";
+                                    echo "<ul style='list-style-type: none; padding-left: 0;'>";
                                     while ($row_libro = $result_libri->fetch_assoc()) {
                                         echo "<li>" . $row_libro['titolo'] . "</li>";
                                     }
                                     echo "</ul>";
                                 }
                                 echo "</div>";
-                                echo "<div class='modal-footer'>";
+                                echo "<div class='modal-footer justify-content-center'>";
                                 echo "<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Chiudi</button>";
                                 echo "</div>";
                                 echo "</div>";
@@ -194,6 +308,14 @@
                                 echo "<label for='birthDate' class='form-label'>Data di nascita</label>";
                                 echo "<input type='date' class='form-control' id='birthDate' name='birthDate' value='" . $row_autore['data_di_nascita'] . "' required>";
                                 echo "</div>";
+                                echo "<div class='mb-3'>";
+                                echo "<label for='ritratto' class='form-label'>Ritratto</label>";
+                                if (isset($row_autore['ritratto'])) {
+                                    echo "<input type='text' class='form-control' id='ritratto' name='ritratto' value='" . $row_autore['ritratto'] . "' required>";
+                                } else {
+                                    echo "<input type='text' class='form-control' id='ritratto' name='ritratto' required>";
+                                }
+                                echo "</div>";
                                 echo "<div class='modal-footer'>";
                                 echo "<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Chiudi</button>";
                                 echo "<button type='submit' form='editAuthorForm" . $row_autore['id'] . "' class='btn btn-light'>Salva</button>";
@@ -206,15 +328,15 @@
                             }
                         }
 
-                        echo "<td>" . $row['anno_pubblicazione'] . "</td>";
-                        echo "<td>" . $row['genere'] . "</td>";
-                        echo "<td>" . $row['prezzo'] . "</td>";
-                        echo "<td>";
+                        echo "<td class='align-middle'>" . $row['anno_pubblicazione'] . "</td>";
+                        echo "<td class='align-middle'>" . $row['genere'] . "</td>";
+                        echo "<td class='align-middle'>" . $row['prezzo'] . "</td>";
+                        echo "<td class='align-middle'>";
                         echo "<form method='post' action='gestione.php' style='display: inline;'>";
                         echo "<input type='hidden' name='delete_id' value='" . $row['id'] . "'>";
-                        echo "<button type='submit' class='btn btn-danger me-2'>Cancella</button>";
+                        echo "<button type='submit' class='btn btn-danger mb-2 d-block'><i class='bi bi-trash-fill'></i></button>";
                         echo "</form>";
-                        echo "<button class='btn btn-light' data-bs-toggle='modal' data-bs-target='#editBookModal" . $row['id'] . "'>Modifica</button>";
+                        echo "<button class='btn btn-warning d-block' data-bs-toggle='modal' data-bs-target='#editBookModal" . $row['id'] . "'><i class='bi bi-pencil-fill'></i></button>";
                         echo "</td>";
                         echo "</tr>";
                     }
@@ -237,9 +359,17 @@
                                 echo "<label for='titolo' class='form-label'>Titolo</label>";
                                 echo "<input type='text' class='form-control' id='titolo' name='titolo' value='" . $row['titolo'] . "' required>";
                                 echo "</div>";
+                                $sql_autori = "SELECT id, nome FROM autori";
+                                $result_autori = $mysqli->query($sql_autori);
+
                                 echo "<div class='mb-3'>";
                                 echo "<label for='autore' class='form-label'>Autore</label>";
-                                echo "<input type='text' class='form-control' id='autore' name='autore' value='" . $row['autore'] . "' required>";
+                                echo "<select class='form-control' id='autore' name='autore' required>";
+                                while ($row_autore = $result_autori->fetch_assoc()) {
+                                    $selected = $row_autore['id'] == $row['autore_id'] ? 'selected' : '';
+                                    echo '<option value="' . $row_autore['id'] . '" ' . $selected . '>' . $row_autore['nome'] . '</option>';
+                                }
+                                echo "</select>";
                                 echo "</div>";
                                 echo "<div class='mb-3'>";
                                 echo "<label for='anno_pubblicazione' class='form-label'>Anno Pubblicazione</label>";

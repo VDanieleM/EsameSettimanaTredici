@@ -32,6 +32,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `autori` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `nome` VARCHAR(255) NOT NULL,
     `data_di_nascita` DATE NOT NULL,
+    `ritratto` VARCHAR(255),
 
     PRIMARY KEY (`id`))";
 $mysqli->query($sql);

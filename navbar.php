@@ -10,7 +10,11 @@
 </head>
 
 <body>
-    <?php session_start(); ?>
+    <?php
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    ?>
     <nav class="navbar bg-dark border-bottom navbar-expand-lg border-body" data-bs-theme="dark">
         <div class="container-fluid">
             <a class="navbar-brand">La nostra liberia</a>
@@ -23,7 +27,7 @@
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <?php if (isset($_SESSION['username'])): ?>
                         <li class="nav-item d-flex align-items-center">
-                            <span class="navbar-text text-white me-2">Ciao,
+                            <span class="navbar-text text-white me-2 fw-bold">Ciao,
                                 <?php echo $_SESSION['username']; ?>
                             </span>
                             <a class="nav-link btn btn-light" href="logout.php">Logout</a>
