@@ -300,6 +300,9 @@ if (!isset($_SESSION['username'])) {
                                 echo "<div class='modal-body'>";
                                 echo "<form id='editAuthorForm" . $row_autore['id'] . "' method='post' action='gestione.php'>";
                                 echo "<input type='hidden' name='edit_author_id' value='" . $row_autore['id'] . "'>";
+                                echo "<div class='alert alert-warning' role='alert'>";
+                                echo "Attenzione, da questo pannello modificherai questo autore (per tutti i libri), se vuoi cambiare l'autore di questo libro specifico vai in modifica libro";
+                                echo "</div>";
                                 echo "<div class='mb-3'>";
                                 echo "<label for='authorName' class='form-label'>Nome</label>";
                                 echo "<input type='text' class='form-control' id='authorName' name='authorName' value='" . $row_autore['nome'] . "' required>";
